@@ -3,13 +3,24 @@
  * Enhanced prompting system for professional resume websites
  */
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ResumeBuilder from './components/ResumeBuilder';
 import UsageDashboard from './components/UsageDashboard';
+import Dashboard from './components/Dashboard/Dashboard';
+import AuthModal from './components/Auth/AuthModal';
 import './App.css';
 
-function App() {
+function AppContent() {
+  const { user, profile, signOut, loading, isConfigured } = useAuth();
   const [currentView, setCurrentView] = useState('landing');
   const [builderData, setBuilderData] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+
+  const openAuthModal = (mode = 'login') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
 
   const LandingPage = () => (
     <div className="landing-page">
@@ -21,13 +32,46 @@ function App() {
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#pricing">Pricing</a>
-            <button 
+            <button
               className="usage-btn"
               onClick={() => setCurrentView('usage')}
             >
               📊 Usage
             </button>
-            <button 
+            {isConfigured && (
+              user ? (
+                <>
+                  <button
+                    className="dashboard-btn"
+                    onClick={() => setCurrentView('dashboard')}
+                  >
+                    My Websites
+                  </button>
+                  <button
+                    className="signout-btn"
+                    onClick={signOut}
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="login-btn"
+                    onClick={() => openAuthModal('login')}
+                  >
+                    Log In
+                  </button>
+                  <button
+                    className="signup-btn"
+                    onClick={() => openAuthModal('signup')}
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )
+            )}
+            <button
               className="start-btn"
               onClick={() => setCurrentView('builder')}
             >
@@ -283,7 +327,7 @@ function App() {
       )}
       {currentView === 'usage' && (
         <div className="usage-container">
-          <button 
+          <button
             className="back-button"
             onClick={() => setCurrentView('landing')}
           >
@@ -292,7 +336,26 @@ function App() {
           <UsageDashboard />
         </div>
       )}
+      {currentView === 'dashboard' && user && (
+        <Dashboard
+          onCreateNew={() => setCurrentView('builder')}
+          onBack={() => setCurrentView('landing')}
+        />
+      )}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

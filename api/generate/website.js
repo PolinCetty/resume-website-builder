@@ -2,6 +2,29 @@
  * Vercel Serverless Function: Website Generation
  * POST /api/generate/website
  */
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
+
+async function getUserFromRequest(req) {
+  if (!supabaseAdmin) return null;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  const token = authHeader.replace('Bearer ', '');
+
+  try {
+    const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+    return user;
+  } catch {
+    return null;
+  }
+}
 
 class WebsiteGenerationService {
   generateWebsite(formData, selectedDomain) {
@@ -266,11 +289,11 @@ h3 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--secondary); }
 
 const service = new WebsiteGenerationService();
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -281,7 +304,7 @@ export default function handler(req, res) {
   }
 
   try {
-    const { formData, selectedDomain } = req.body;
+    const { formData, selectedDomain, saveToAccount } = req.body;
 
     // Validate required fields
     const required = ['fullName', 'email', 'targetRole', 'targetCompany'];
@@ -298,9 +321,38 @@ export default function handler(req, res) {
     const website = service.generateWebsite(formData, selectedDomain);
     const appealScore = service.calculateAppealScore(formData);
 
+    let savedSite = null;
+
+    // If user is authenticated and wants to save, store in database
+    if (saveToAccount && supabaseAdmin) {
+      const user = await getUserFromRequest(req);
+
+      if (user) {
+        const { data, error } = await supabaseAdmin
+          .from('sites')
+          .insert({
+            user_id: user.id,
+            form_data: formData,
+            domain: selectedDomain?.domain,
+            domain_data: selectedDomain,
+            current_html: website.html,
+            current_css: website.css,
+            current_js: website.js,
+            status: 'draft'
+          })
+          .select()
+          .single();
+
+        if (!error) {
+          savedSite = data;
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
       website,
+      savedSite,
       domain: selectedDomain,
       analytics: {
         targetCompany: formData.targetCompany,

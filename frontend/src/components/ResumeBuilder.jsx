@@ -3,10 +3,16 @@
  * Focus: Better prompting for improved site design
  */
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 import './ResumeBuilder.css';
 
 const ResumeBuilder = () => {
+  const { user, isConfigured: authConfigured } = useAuth();
   const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     // Personal Info
     fullName: '',
@@ -285,6 +291,41 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
         ? prev.focusAreas.filter(a => a !== area)
         : [...prev.focusAreas, area]
     }));
+  };
+
+  const saveToAccount = async () => {
+    if (!user || !isSupabaseConfigured()) {
+      setSaveError('Please log in to save your website');
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('sites')
+        .insert({
+          user_id: user.id,
+          form_data: formData,
+          domain: selectedDomain?.domain,
+          domain_data: selectedDomain,
+          current_html: generatedSite.html,
+          current_css: generatedSite.css || '',
+          current_js: generatedSite.js || '',
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setSaveSuccess(true);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const skillOptions = [
@@ -589,6 +630,34 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
                 className="preview-iframe"
                 sandbox="allow-scripts"
               />
+
+              {authConfigured && user && (
+                <div className="save-section">
+                  {saveSuccess ? (
+                    <div className="save-success">
+                      Website saved to your account!
+                    </div>
+                  ) : (
+                    <>
+                      {saveError && <div className="save-error">{saveError}</div>}
+                      <button
+                        className="save-btn"
+                        onClick={saveToAccount}
+                        disabled={saving}
+                      >
+                        {saving ? 'Saving...' : 'Save to My Account'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {authConfigured && !user && (
+                <div className="login-prompt">
+                  <p>Log in to save this website to your account</p>
+                </div>
+              )}
+
               <div className="deploy-actions">
                 <button onClick={() => setStep(3)}>Edit Design</button>
                 <button>Deploy to {selectedDomain?.domain}</button>

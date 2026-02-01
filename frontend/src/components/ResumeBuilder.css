@@ -545,3 +545,66 @@ iframe.preview-iframe {
 .generate-btn .spinner {
   margin-right: 8px;
 }
+
+/* Save Section */
+.save-section {
+  margin: 24px 0;
+  padding: 20px;
+  background: #f0f9ff;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  text-align: center;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+}
+
+.save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.save-success {
+  background: #d1fae5;
+  color: #059669;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.save-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.login-prompt {
+  margin: 24px 0;
+  padding: 20px;
+  background: #fef3c7;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  text-align: center;
+}
+
+.login-prompt p {
+  margin: 0;
+  color: #92400e;
+  font-weight: 500;
+}
