@@ -42,6 +42,35 @@ const ResumeBuilder = () => {
   const [selectedDomain, setSelectedDomain] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [generatedSite, setGeneratedSite] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState(null);
+
+  // Test data for rapid testing in development
+  const TEST_DATA = {
+    fullName: 'Jane Developer',
+    email: 'jane@example.com',
+    phone: '555-123-4567',
+    location: 'San Francisco, CA',
+    linkedinUrl: 'https://linkedin.com/in/janedev',
+    portfolioUrl: 'https://janedev.com',
+    currentTitle: 'Senior Software Engineer',
+    targetRole: 'Staff Engineer',
+    targetCompany: 'Google',
+    industryExperience: 'Tech',
+    keySkills: ['JavaScript', 'React', 'Node.js', 'AWS'],
+    careerLevel: 'senior',
+    salaryRange: '',
+    workStyle: '',
+    style: 'modern',
+    colorScheme: 'professional',
+    layout: 'two-column',
+    focusAreas: ['technical-skills', 'achievements'],
+    callToAction: 'hire-me'
+  };
+
+  const enableTestMode = () => {
+    setFormData(TEST_DATA);
+  };
 
   // Enhanced prompting for better site design
   const generateDesignPrompt = () => {
@@ -207,18 +236,33 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
   };
 
   const generateWebsite = async () => {
-    const designPrompt = generateDesignPrompt();
-    
-    // Here you would integrate with your AI service (Claude, GPT, etc.)
-    console.log('Generating website with prompt:', designPrompt);
-    
-    // Mock generation for now
-    setGeneratedSite({
-      html: '<div class="resume-site">Generated site content...</div>',
-      css: '/* Generated styles */',
-      js: '// Generated interactions'
-    });
-    setPreviewMode(true);
+    setIsGenerating(true);
+    setGenerationError(null);
+
+    try {
+      const response = await fetch('/api/generate/website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData,
+          selectedDomain
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setGeneratedSite(data.website);
+        setPreviewMode(true);
+      } else {
+        setGenerationError(data.error || 'Failed to generate website');
+      }
+    } catch (error) {
+      console.error('Generation failed:', error);
+      setGenerationError('Failed to connect to server. Make sure the backend is running.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -259,12 +303,19 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
 
   return (
     <div className="resume-builder">
-      <div className="progress-bar">
-        <div className={`step ${step >= 1 ? 'completed' : ''}`}>1. Basic Info</div>
-        <div className={`step ${step >= 2 ? 'completed' : ''}`}>2. Professional Profile</div>
-        <div className={`step ${step >= 3 ? 'completed' : ''}`}>3. Design Preferences</div>
-        <div className={`step ${step >= 4 ? 'completed' : ''}`}>4. Domain Selection</div>
-        <div className={`step ${step >= 5 ? 'completed' : ''}`}>5. Generate & Preview</div>
+      <div className="builder-header">
+        <div className="progress-bar">
+          <div className={`step ${step >= 1 ? 'completed' : ''}`}>1. Basic Info</div>
+          <div className={`step ${step >= 2 ? 'completed' : ''}`}>2. Professional Profile</div>
+          <div className={`step ${step >= 3 ? 'completed' : ''}`}>3. Design Preferences</div>
+          <div className={`step ${step >= 4 ? 'completed' : ''}`}>4. Domain Selection</div>
+          <div className={`step ${step >= 5 ? 'completed' : ''}`}>5. Generate & Preview</div>
+        </div>
+        {process.env.NODE_ENV === 'development' && (
+          <button onClick={enableTestMode} className="test-mode-btn">
+            Fill Test Data
+          </button>
+        )}
       </div>
 
       {step === 1 && (
@@ -496,7 +547,7 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
 
       {step === 5 && (
         <div className="step-content">
-          <h2>🚀 Generate Your Professional Website</h2>
+          <h2>Generate Your Professional Website</h2>
           <div className="generation-summary">
             <h3>Ready to Create:</h3>
             <ul>
@@ -508,25 +559,52 @@ Create HTML/CSS/JS that makes ${fullName} irresistible for the ${targetRole} at 
             </ul>
           </div>
 
-          <button 
+          {generationError && (
+            <div className="error-message">
+              {generationError}
+            </div>
+          )}
+
+          <button
             className="generate-btn"
             onClick={generateWebsite}
-            disabled={!selectedDomain}
+            disabled={!selectedDomain || isGenerating}
           >
-            🎨 Generate Professional Website
+            {isGenerating ? (
+              <>
+                <span className="spinner"></span>
+                Generating...
+              </>
+            ) : (
+              'Generate Professional Website'
+            )}
           </button>
 
           {generatedSite && (
             <div className="preview-section">
               <h3>Preview & Deploy</h3>
-              <div className="preview-iframe">
-                {/* Website preview would go here */}
-                <p>Generated website preview...</p>
-              </div>
+              <iframe
+                srcDoc={generatedSite.html}
+                title="Website Preview"
+                className="preview-iframe"
+                sandbox="allow-scripts"
+              />
               <div className="deploy-actions">
-                <button>Edit Design</button>
+                <button onClick={() => setStep(3)}>Edit Design</button>
                 <button>Deploy to {selectedDomain?.domain}</button>
-                <button>Download Files</button>
+                <button
+                  onClick={() => {
+                    const blob = new Blob([generatedSite.html], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'resume-website.html';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Download Files
+                </button>
               </div>
             </div>
           )}
