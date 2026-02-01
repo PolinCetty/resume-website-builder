@@ -17,7 +17,7 @@
 /* Landing Page */
 .landing-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
 }
 
 /* Navigation */
@@ -63,7 +63,7 @@
 .usage-btn,
 .start-btn {
   background: white;
-  color: #667eea;
+  color: #1a365d;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -136,7 +136,7 @@
 
 .cta-button {
   background: white;
-  color: #667eea;
+  color: #1a365d;
   border: none;
   padding: 20px 40px;
   border-radius: 12px;
@@ -219,7 +219,7 @@
   border-radius: 6px;
   flex: 1;
   font-size: 14px;
-  color: #667eea;
+  color: #1a365d;
   font-weight: 600;
 }
 
@@ -245,7 +245,7 @@
 }
 
 .preview-cta {
-  background: #667eea;
+  background: #1a365d;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -332,7 +332,7 @@
 }
 
 .feature-examples span {
-  background: #667eea;
+  background: #1a365d;
   color: white;
   padding: 6px 12px;
   border-radius: 16px;
@@ -401,7 +401,7 @@
 
 .story-author {
   font-weight: 600;
-  color: #667eea;
+  color: #1a365d;
 }
 
 /* Pricing Section */
@@ -447,8 +447,8 @@
 }
 
 .pricing-card.featured {
-  border-color: #667eea;
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
+  border-color: #1a365d;
+  box-shadow: 0 20px 60px rgba(26, 54, 93, 0.2);
 }
 
 .plan-badge {
@@ -456,7 +456,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #667eea;
+  background: #1a365d;
   color: white;
   padding: 6px 20px;
   border-radius: 20px;
@@ -473,7 +473,7 @@
 .price {
   font-size: 3rem;
   font-weight: 700;
-  color: #667eea;
+  color: #1a365d;
   margin-bottom: 30px;
 }
 
@@ -497,7 +497,7 @@
 
 .plan-button {
   width: 100%;
-  background: #667eea;
+  background: #1a365d;
   color: white;
   border: none;
   padding: 16px;
@@ -509,7 +509,7 @@
 }
 
 .plan-button:hover {
-  background: #5a67d8;
+  background: #2d3748;
 }
 
 /* Footer */
